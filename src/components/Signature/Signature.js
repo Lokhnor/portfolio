@@ -1,0 +1,64 @@
+import React, { useEffect, useState, useRef } from "react";
+import UseEventListener from "../UseEventListener/UseEventListener";
+import css from "./Signature.module.css";
+let ctx;
+let c;
+function Signature() {
+  const [isDrawing, setIsDrawing] = useState(false);
+  const canvasRef = useRef(null);
+  const [image, setImage] = useState();
+
+  function handlePrintImg() {
+    setImage(c.toDataURL("image/png"));
+    console.log("Printed Image in base64: ", image);
+  }
+
+  useEffect(() => {
+    c = canvasRef.current;
+    ctx = c.getContext("2d");
+  }, []);
+
+  function draw(x, y) {
+    ctx.lineTo(x, y);
+    ctx.closePath();
+    ctx.stroke();
+    ctx.moveTo(x, y);
+  }
+
+  UseEventListener("mousedown", ({ clientX, clientY }) => {
+    const { x, y } = canvasRef.current.getBoundingClientRect();
+    setIsDrawing(true);
+    ctx.beginPath();
+    ctx.moveTo(clientX - x, clientY - y);
+    ctx.strokeStyle = "black";
+    ctx.lineWidth = 2;
+    ctx.lineJoin = "round";
+  });
+  UseEventListener("mouseup", () => {
+    setIsDrawing(false);
+  });
+  UseEventListener("mousemove", ({ x: clientX, y: clientY }) => {
+    const { x, y } = canvasRef.current.getBoundingClientRect();
+    if (isDrawing) {
+      draw(clientX - x, clientY - y);
+    }
+  });
+  function clearCanvas() {
+    ctx.fillStyle = "white";
+    ctx.fillRect(0, 0, 1000, 1000);
+  }
+  return (
+    <>
+      <canvas
+        className={css.canvasStyle}
+        id="canvas"
+        height={300}
+        width={700}
+        ref={canvasRef}
+      ></canvas>
+      <button onClick={clearCanvas}>Clear</button>
+      <button onClick={handlePrintImg}>Print Img</button>
+    </>
+  );
+}
+export default Signature;
